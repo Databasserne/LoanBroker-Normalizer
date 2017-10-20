@@ -103,6 +103,7 @@ public class Normalizer {
      * @return converted JSON
      */
     private static String messageToJson(String id, String message) {
+        System.out.println("Here: " + id);
         int ssn;
         double rate;
 
@@ -124,31 +125,38 @@ public class Normalizer {
         return temp;
     }
 
-    //TODO - uncomment and change to correct exchange name
+    /**
+     * Sends message to Aggregator
+     *
+     * @param message message to send
+     * @throws IOException
+     * @throws TimeoutException
+     */
     private static void send(String message) throws IOException, TimeoutException {
-//        ConnectionFactory factory = new ConnectionFactory();
-//        factory.setHost(HOST_NAME);
-//        factory.setUsername("student");
-//        factory.setPassword("cph");
-//        Connection connection = factory.newConnection();
-//        Channel XMLChannel = connection.createChannel();
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(HOST_NAME);
+        factory.setUsername("student");
+        factory.setPassword("cph");
+        Connection connection = factory.newConnection();
+        Channel aggregatorChannel = connection.createChannel();
 //        String aggregatorQueue = "Databasserne_Normalizer";
-//
-//        System.out.println("\n***SENDING MESSAGE***");
+
+        System.out.println("\n***SENDING MESSAGE***");
 //        String replyKey = "Normalizer";
-//
-//        XMLChannel.exchangeDeclare(SEND_NAME, "direct");
-//
-//        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties()
-//                .builder()
-//                .replyTo(aggregatorQueue)
-//                .correlationId("Normalizer")
-//                .build();
-//
-//        System.out.println("\n**Send to Aggregator**: " + message);
-//        XMLChannel.basicPublish(SEND_NAME, replyKey, basicProperties, message.getBytes());
-//        XMLChannel.close();
-//        connection.close();
-        System.out.println("\n**Send to Aggregator**\n" + message);
+
+        aggregatorChannel.queueDeclare(SEND_NAME, true, false, false, null);
+//        aggregatorChannel.exchangeDeclare(SEND_NAME, "direct");
+
+        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties()
+                .builder()
+                .correlationId("Normalizer")
+                .build();
+
+        System.out.println("\n**Send to Aggregator**: " + message);
+        aggregatorChannel.basicPublish("", SEND_NAME, basicProperties, message.getBytes());
+
+        aggregatorChannel.close();
+        connection.close();
+//        System.out.println("\n**Send to Aggregator**\n" + message);
     }
 }
