@@ -27,11 +27,10 @@ import org.json.XML;
  */
 public class Normalizer {
 
-    public static String QUEUE_NAME;
     private final static String SEND_NAME = "Databasserne_Aggregator";
+    private final static String HOST_NAME = "datdb.cphbusiness.dk";
 //    private final static String HOST_NAME = "10.18.144.10";
-//    private final static String HOST_NAME = "datdb.cphbusiness.dk";
-    private final static String HOST_NAME = "5.179.80.218";
+//    private final static String HOST_NAME = "5.179.80.218";
 
     /**
      * Listens to response from the bank
@@ -77,7 +76,7 @@ public class Normalizer {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String receivedMessage = new String(body);
-                System.out.println("\n***MESSAGE RECEIVED***");
+                System.out.println("\n******");
                 System.out.println("ID: " + properties.getCorrelationId());
                 System.out.println("Received: " + receivedMessage);
                 chan.basicAck(envelope.getDeliveryTag(), false);
@@ -103,7 +102,6 @@ public class Normalizer {
      * @return converted JSON
      */
     private static String messageToJson(String id, String message) {
-        System.out.println("Here: " + id);
         int ssn;
         double rate;
 
@@ -139,24 +137,19 @@ public class Normalizer {
         factory.setPassword("cph");
         Connection connection = factory.newConnection();
         Channel aggregatorChannel = connection.createChannel();
-//        String aggregatorQueue = "Databasserne_Normalizer";
-
-        System.out.println("\n***SENDING MESSAGE***");
-//        String replyKey = "Normalizer";
 
         aggregatorChannel.queueDeclare(SEND_NAME, true, false, false, null);
-//        aggregatorChannel.exchangeDeclare(SEND_NAME, "direct");
 
         AMQP.BasicProperties basicProperties = new AMQP.BasicProperties()
                 .builder()
                 .correlationId("Normalizer")
                 .build();
 
-        System.out.println("\n**Send to Aggregator**: " + message);
+        System.out.println("Sent to Aggregator: " + message);
+        System.out.println("******");
         aggregatorChannel.basicPublish("", SEND_NAME, basicProperties, message.getBytes());
 
         aggregatorChannel.close();
         connection.close();
-//        System.out.println("\n**Send to Aggregator**\n" + message);
     }
 }

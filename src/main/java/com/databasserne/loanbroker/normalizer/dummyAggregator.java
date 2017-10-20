@@ -16,8 +16,6 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,12 +23,10 @@ import java.util.logging.Logger;
  */
 public class dummyAggregator {
 
-    public static String QUEUE_NAME;
-    private final static String SEND_NAME = "Databasserne_Aggregator";
 //    private final static String HOST_NAME = "10.18.144.10";
-//    private final static String HOST_NAME = "datdb.cphbusiness.dk";
-    private final static String HOST_NAME = "5.179.80.218";
-    
+//    private final static String HOST_NAME = "5.179.80.218";
+    private final static String HOST_NAME = "datdb.cphbusiness.dk";
+
     public static void main(String[] args) throws IOException, ShutdownSignalException, InterruptedException, ConsumerCancelledException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(HOST_NAME);
@@ -57,14 +53,6 @@ public class dummyAggregator {
                 System.out.println("ID: " + properties.getCorrelationId());
                 System.out.println("Received: " + receivedMessage);
                 chan.basicAck(envelope.getDeliveryTag(), false);
-
-//                try {
-//                    //TODO - format to single output form and send to aggregator
-////                    send(messageToJson(properties.getCorrelationId(), receivedMessage));
-//                    System.out.println("modtaget");
-//                } catch (TimeoutException ex) {
-//                    Logger.getLogger(Normalizer.class.getName()).log(Level.SEVERE, null, ex);
-//                }
 
             }
         };
