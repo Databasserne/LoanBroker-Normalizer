@@ -102,18 +102,33 @@ public class Normalizer {
      * @return converted JSON
      */
     private static String messageToJson(String id, String message) {
-        int ssn;
+        String ssn;
         double rate;
+
+        String thisM = " {\"ssn\":\"123456-1234\",\"interestRate\":4.7}";
 
         if (id.contains("XML")) {
             JSONObject xml = XML.toJSONObject(message);
             JSONObject lr = xml.getJSONObject("LoanResponse");
-            ssn = lr.getInt("ssn");
+            ssn = lr.get("ssn").toString();
             rate = lr.getDouble("interestRate");
         } else {
-            JSONObject json = new JSONObject(message);
-            ssn = json.getInt("ssn");
+            JSONObject json = new JSONObject(thisM);
+            if (json.get("ssn") instanceof Integer) {
+                System.out.println("ssn was int");
+            } else {
+                System.out.println("ssn was string");
+            }
+            ssn = json.get("ssn").toString();
             rate = json.getDouble("interestRate");
+        }
+
+        if (!ssn.contains("-")) {
+            String tempSSN = ssn;
+            String ssn1 = tempSSN.substring(0, 6);
+            String ssn2 = tempSSN.substring(6, 10);
+            String ssnFull = ssn1 + "-" + ssn2;
+            ssn = ssnFull;
         }
 
         String temp
