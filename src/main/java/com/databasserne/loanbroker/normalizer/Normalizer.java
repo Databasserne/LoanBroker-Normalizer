@@ -105,24 +105,19 @@ public class Normalizer {
         String ssn;
         double rate;
 
-        String thisM = " {\"ssn\":\"123456-1234\",\"interestRate\":4.7}";
-
+        //Check if XML or JSON format, and extract values
         if (id.contains("XML")) {
             JSONObject xml = XML.toJSONObject(message);
             JSONObject lr = xml.getJSONObject("LoanResponse");
             ssn = lr.get("ssn").toString();
             rate = lr.getDouble("interestRate");
         } else {
-            JSONObject json = new JSONObject(thisM);
-            if (json.get("ssn") instanceof Integer) {
-                System.out.println("ssn was int");
-            } else {
-                System.out.println("ssn was string");
-            }
+            JSONObject json = new JSONObject(message);
             ssn = json.get("ssn").toString();
             rate = json.getDouble("interestRate");
         }
 
+        //Check if ssn contains "-" if not, add it.
         if (!ssn.contains("-")) {
             String tempSSN = ssn;
             String ssn1 = tempSSN.substring(0, 6);
@@ -131,6 +126,7 @@ public class Normalizer {
             ssn = ssnFull;
         }
 
+        //Set message together and return it
         String temp
                 = "{\"ssn\":\"" + ssn + "\","
                 + "\"interestRate\":" + rate + ","
