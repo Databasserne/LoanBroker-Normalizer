@@ -130,7 +130,7 @@ public class Normalizer {
         String temp
                 = "{\"ssn\":\"" + ssn + "\","
                 + "\"interestRate\":" + rate + ","
-                + "\"bank\":" + id + "}";
+                + "\"bank\":\"" + id + "\"}";
         return temp;
     }
 
