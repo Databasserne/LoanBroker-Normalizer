@@ -59,6 +59,17 @@ public class Normalizer {
     }
 
     /**
+     * For testing purposes calls the private toJson method
+     *
+     * @param id bank id
+     * @param message message
+     * @return correct form message
+     */
+    public String messageFormatter(String id, String message) {
+        return messageToJson(id, message);
+    }
+
+    /**
      * Listen to messages from Databasserne_Normalizer queue
      *
      * @param chan channel to consume from
