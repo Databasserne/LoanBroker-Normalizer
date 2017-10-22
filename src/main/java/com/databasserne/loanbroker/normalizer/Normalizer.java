@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
 
@@ -104,33 +105,37 @@ public class Normalizer {
     private static String messageToJson(String id, String message) {
         String ssn;
         double rate;
+        String temp = "";
 
-        //Check if XML or JSON format, and extract values
-        if (id.contains("XML")) {
-            JSONObject xml = XML.toJSONObject(message);
-            JSONObject lr = xml.getJSONObject("LoanResponse");
-            ssn = lr.get("ssn").toString();
-            rate = lr.getDouble("interestRate");
-        } else {
-            JSONObject json = new JSONObject(message);
-            ssn = json.get("ssn").toString();
-            rate = json.getDouble("interestRate");
+        try {
+            //Check if XML or JSON format, and extract values
+            if (id.contains("XML")) {
+                JSONObject xml = XML.toJSONObject(message);
+                JSONObject lr = xml.getJSONObject("LoanResponse");
+                ssn = lr.get("ssn").toString();
+                rate = lr.getDouble("interestRate");
+            } else {
+                JSONObject json = new JSONObject(message);
+                ssn = json.get("ssn").toString();
+                rate = json.getDouble("interestRate");
+            }
+
+            //Check if ssn contains "-" if not, add it.
+            if (!ssn.contains("-")) {
+                String tempSSN = ssn;
+                String ssn1 = tempSSN.substring(0, 6);
+                String ssn2 = tempSSN.substring(6, 10);
+                String ssnFull = ssn1 + "-" + ssn2;
+                ssn = ssnFull;
+            }
+
+            //Set message together and return it
+            temp = "{\"ssn\":\"" + ssn + "\","
+                    + "\"interestRate\":" + rate + ","
+                    + "\"bank\":\"" + id + "\"}";
+        } catch (JSONException e) {
+            System.out.println("Exception received");
         }
-
-        //Check if ssn contains "-" if not, add it.
-        if (!ssn.contains("-")) {
-            String tempSSN = ssn;
-            String ssn1 = tempSSN.substring(0, 6);
-            String ssn2 = tempSSN.substring(6, 10);
-            String ssnFull = ssn1 + "-" + ssn2;
-            ssn = ssnFull;
-        }
-
-        //Set message together and return it
-        String temp
-                = "{\"ssn\":\"" + ssn + "\","
-                + "\"interestRate\":" + rate + ","
-                + "\"bank\":\"" + id + "\"}";
         return temp;
     }
 
@@ -142,25 +147,28 @@ public class Normalizer {
      * @throws TimeoutException
      */
     private static void send(String message) throws IOException, TimeoutException {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(HOST_NAME);
-        factory.setUsername("student");
-        factory.setPassword("cph");
-        Connection connection = factory.newConnection();
-        Channel aggregatorChannel = connection.createChannel();
+        //if message is "" it means an exception was thrown in the formatter, dont sent anything
+        if (!message.equals("")) {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost(HOST_NAME);
+            factory.setUsername("student");
+            factory.setPassword("cph");
+            Connection connection = factory.newConnection();
+            Channel aggregatorChannel = connection.createChannel();
 
-        aggregatorChannel.queueDeclare(SEND_NAME, true, false, false, null);
+            aggregatorChannel.queueDeclare(SEND_NAME, true, false, false, null);
 
-        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties()
-                .builder()
-                .correlationId("Normalizer")
-                .build();
+            AMQP.BasicProperties basicProperties = new AMQP.BasicProperties()
+                    .builder()
+                    .correlationId("Normalizer")
+                    .build();
 
-        System.out.println("Sent to Aggregator: " + message);
-        System.out.println("******");
-        aggregatorChannel.basicPublish("", SEND_NAME, basicProperties, message.getBytes());
+            System.out.println("Sent to Aggregator: " + message);
+            System.out.println("******");
+            aggregatorChannel.basicPublish("", SEND_NAME, basicProperties, message.getBytes());
 
-        aggregatorChannel.close();
-        connection.close();
+            aggregatorChannel.close();
+            connection.close();
+        }
     }
 }
